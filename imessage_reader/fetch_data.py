@@ -28,7 +28,7 @@ class FetchData:
     print and export the messages.
     """
 
-    # The SQL command
+    # The SQL command with optional WHERE clause for filtering
     SQL_CMD = (
         "SELECT "
         "text, "
@@ -40,16 +40,19 @@ class FetchData:
         "message.attributedBody, "
         "message.cache_has_attachments "
         "FROM message "
-        "JOIN handle on message.handle_id=handle.ROWID"
+        "JOIN handle on message.handle_id=handle.ROWID "
+        "{where_clause}"  # New placeholder for WHERE clause
     )
 
-    def __init__(self, db_path: str, system=None):
+    def __init__(self, db_path: str, contact_filter: str = None, system=None):
         """Constructor method
 
         :param db_path: Path to the chat.db file
+        :param contact_filter: Phone number or email to filter messages
         :param system: Operating System
         """
         self.db_path = db_path
+        self.contact_filter = contact_filter
         if system is None:
             self.operating_system = common.get_platform()
 
@@ -63,8 +66,15 @@ class FetchData:
 
         :return: list containing the user id, messages, the service and the account
         """
-
-        rval = common.fetch_db_data(self.db_path, self.SQL_CMD)
+        # Build WHERE clause if contact filter is provided
+        where_clause = ""
+        if self.contact_filter:
+            where_clause = f"WHERE handle.id = '{self.contact_filter}'"
+        
+        # Insert WHERE clause into SQL command
+        sql_cmd = self.SQL_CMD.format(where_clause=where_clause)
+        
+        rval = common.fetch_db_data(self.db_path, sql_cmd)
 
         data = []
         for row in rval:

@@ -65,6 +65,13 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true"
     )
 
+    parser.add_argument(
+        "-c",
+        "--contact",
+        type=str,
+        help="Filter messages by contact (phone number or email)",
+    )
+
     return parser
 
 
@@ -74,23 +81,24 @@ def check_database_path(args):
     :param args: the user's input
     """
     if args.path == MACOS_DB_PATH:
-        evaluate(MACOS_DB_PATH, args.output, args.recipients, args.version)
+        evaluate(MACOS_DB_PATH, args.output, args.recipients, args.version, args.contact)
     elif os.path.isdir(args.path):
         db_path = args.path + "/chat.db"
-        evaluate(db_path, args.output, args.recipients, args.version)
+        evaluate(db_path, args.output, args.recipients, args.version, args.contact)
     else:
         sys.exit("Path doesn't exist! Exit program.")
 
 
-def evaluate(path: str, output: str, recipients: bool, version: bool):
+def evaluate(path: str, output: str, recipients: bool, version: bool, contact: str = None):
     """Evaluate the given options and perform the appropriate actions.
 
     :param path: path to the chat.db file
     :param output: create an Excel/SQLite3 file
     :param recipients: recipients of the messages
     :param version: specify if the version of this program should be shown
+    :param contact: phone number or email to filter messages
     """
-    data = fetch_data.FetchData(path)
+    data = fetch_data.FetchData(path, contact_filter=contact)
 
     if version:
         info.app_info()
